@@ -1,0 +1,11 @@
+bm25:
+  chunks_path: data/processed/chunks.jsonl
+  results_path: results/bm25_hotpotqa.json
+  corpus_scope: global
+  include_title: true
+  k1: 1.5
+  b: 0.75
+  epsilon: 0.25
+  top_ks:
+    - 1
+    - 5

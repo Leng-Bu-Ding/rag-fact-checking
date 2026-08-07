@@ -1,0 +1,17 @@
+dense:
+  chunks_path: data/processed/hotpotqa_bm25_sample100_chunks.jsonl
+  index_dir: data/index/hotpotqa_dense_sample100
+  results_path: results/dense_hotpotqa_global_sample100.json
+  comparison_path: results/bm25_vs_dense_hotpotqa_global_sample100.json
+  bm25_report_path: results/bm25_hotpotqa_global_sample100.json
+  corpus_scope: global
+  top_ks: [1, 5]
+  include_title: true
+  normalize: true
+  model_name: sentence-transformers/all-MiniLM-L6-v2
+  revision: null
+  device: cpu
+  cache_folder: D:/Tools/HuggingFaceCache/hub
+  local_files_only: true
+  batch_size: 32
+  seed: 42

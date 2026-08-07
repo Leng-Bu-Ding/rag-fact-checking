@@ -1,0 +1,42 @@
+project:
+  name: trustworthy-rag-fact-checking
+  task: fact_checking_qa
+  seed: 42
+
+data:
+  primary_dataset: hotpot_qa
+  primary_subset: distractor
+  split: validation
+  sample_size: 5
+  cache_dir: data/raw
+
+preprocessing:
+  # Character budgets; chunks always preserve complete HotpotQA sentences.
+  chunk_size: 512
+  chunk_overlap: 64
+  min_text_length: 1
+
+retrieval:
+  top_k: 5
+  hybrid_rrf_k: 60
+  dense_model_name: BAAI/bge-base-en-v1.5
+
+generation:
+  provider: local
+  model_name: Qwen2.5-7B-Instruct
+  temperature: 0.0
+  max_new_tokens: 128
+  require_citations: true
+  refusal_text: Insufficient evidence
+
+evaluation:
+  retrieval_metrics:
+    - recall_at_k
+    - hit_at_k
+    - mrr
+    - ndcg_at_k
+  generation_metrics:
+    - exact_match
+    - token_f1
+    - citation_precision
+    - citation_recall

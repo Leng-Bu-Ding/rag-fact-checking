@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.pyc
+
+# Environments
+.conda/
+.conda_legacy_*/
+.conda_pkgs/
+.venv/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Tests and quality tools
+.pytest_cache/
+.test_tmp*/
+pytest-cache-files-*/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Runtime
+.tmp/
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Dataset and generated artifacts
+data/raw/
+data/processed/
+data/index/
+results/
+
+# Operating system
+Thumbs.db
+.DS_Store
