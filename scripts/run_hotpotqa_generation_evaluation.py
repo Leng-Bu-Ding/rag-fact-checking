@@ -69,7 +69,7 @@ def main() -> None:
     dense_config = retrieval["config"]["dense"]
     generator = LocalGroundedGenerator(
         cache_dir=dense_config.get("cache_folder"),
-        local_files_only=True,
+        local_files_only=bool(dense_config.get("local_files_only", False)),
     )
     records: list[dict[str, Any]] = []
     metrics: list[dict[str, float]] = []

@@ -1,27 +1,25 @@
-﻿# AGENTS.md
+# AGENTS.md
 
-Read `PROJECT_STATUS.md`, `TODO.md`, and this file before changing the project.
+修改项目前，必须阅读 `PROJECT_STATUS.md`、`TODO.md` 和本文件。如果存在
+`AGENTS.local.md`，还要读取其中记录的机器专属路径。
 
-## Mission
+## 项目使命
 
-Build a production-minded, interview-explainable RAG system. Favor measurable
-retrieval quality, grounded answers, traceable evidence, and reproducible
-experiments over feature count.
+构建一个具备生产意识、能够在面试中清楚解释的 RAG 系统。优先保证可测量的
+检索质量、有依据的答案、可追踪的证据和可复现实验，而不是盲目增加功能。
 
-## Environment
+## 开发环境
 
-- Platform: Windows PowerShell.
-- Root: `D:\Projects\rag-fact-checking`.
-- Conda manager: `D:\Tools\Anaconda3\Scripts\conda.exe`.
-- Interpreter: `D:\Projects\rag-fact-checking\.conda\python.exe`.
-- Python: 3.11.x.
-- Never assume `python`, `python3`, or `py` is on `PATH`.
-- Never use `.venv/`; it is incomplete.
-- Runtime dependencies are in `requirements.txt`.
-- Test dependencies are in `requirements-dev.txt`.
-- Hugging Face model cache: `D:\Tools\HuggingFaceCache\hub`.
+- 平台：Windows PowerShell
+- 所有命令从仓库根目录运行
+- Python 解释器：`.\.conda\python.exe`
+- Python 版本：3.11.x
+- 不得假设全局 `PATH` 中存在 Python
+- 运行依赖位于 `requirements.txt`
+- 测试依赖位于 `requirements-dev.txt`
+- Git 跟踪文件中不得写死模型缓存路径；使用 `HF_HOME`
 
-Common commands:
+常用命令：
 
 ```powershell
 & '.\.conda\python.exe' -m pip install -r requirements-dev.txt
@@ -38,56 +36,53 @@ Common commands:
 & '.\.conda\python.exe' -m uvicorn app.api:app --reload
 ```
 
-Run commands from the project root.
+## 技术方向
 
-## Technical Direction
+- 主数据集：HotpotQA；跨领域数据集：PubMedQA
+- 配置文件放在 `configs/`
+- 可复用实现放在 `src/`
+- 可执行流水线放在 `scripts/`；HTTP 代码放在 `app/`
+- 数据和索引等产物放在 `data/`；测量报告放在 `results/`
+- 检索演进顺序：BM25 -> Dense FAISS -> Hybrid RRF -> Reranker
+- 生成必须只使用检索证据并输出可追踪引用
+- 检索、答案、引用、忠实度、延迟和成本必须分别评估
 
-- Primary dataset: HotpotQA; cross-domain dataset: PubMedQA.
-- Configuration belongs under `configs/`.
-- Reusable implementation belongs under `src/`.
-- Runnable pipelines belong under `scripts/`; HTTP code belongs under `app/`.
-- Artifacts belong under `data/` and measured reports under `results/`.
-- Retrieval progression: BM25 -> dense FAISS -> hybrid RRF -> reranking.
-- Generation must use retrieved evidence and emit traceable citations.
-- Evaluate retrieval, answers, citations, faithfulness, latency, and cost
-  separately.
+## 工程规则
 
-## Engineering Rules
+- 保持 Python 3.11 兼容，并为公共接口提供类型标注
+- 优先使用小型、经过测试的模块，而不是只在 Notebook 中实现
+- 路径、随机种子、模型名和阈值必须可以配置
+- 数据预处理和评估应尽可能保持确定性
+- 使用 UTF-8 JSONL 保存便于检查的中间记录
+- 保留样本、文档、标题、句子和证据来源信息
+- 所有检索器使用稳定一致的指标定义，并按
+  `(sample_id, title, sentence_id)` 对标准证据去重
+- 除明确的评估或调试输出外，检索器不得看到答案文本或标准标签
+- 基线切块不得拆分 HotpotQA 原始句子
+- 行为发生变化时必须增加测试，并运行完整测试和烟雾命令
+- 不得静默吞掉数据、模型或评估错误
 
-- Keep Python 3.11 compatibility and type-hint public interfaces.
-- Prefer small tested modules over notebook-only implementations.
-- Keep paths, seeds, model names, and thresholds configurable.
-- Make preprocessing and evaluation deterministic where practical.
-- Use UTF-8 JSONL for inspectable intermediate records.
-- Preserve sample, document, title, sentence, and evidence provenance.
-- Keep retrieval metric definitions stable across retrievers and deduplicate
-  gold evidence by `(sample_id, title, sentence_id)`.
-- Never expose answer text or gold labels to a retriever except in explicit
-  evaluation or debugging output.
-- Do not split original HotpotQA sentences during baseline chunking.
-- Add tests for behavioral changes and run tests plus a smoke command.
-- Do not silently catch data, model, or evaluation errors.
+## 安全与变更纪律
 
-## Safety And Change Discipline
+- 不得提交数据集、权重、索引、缓存、密钥或虚拟环境
+- 不得删除 `data/raw/`，其中包含 HotpotQA 缓存
+- 不得修改项目外的规划 PDF 或其他文件
+- 覆盖实验结果前必须记录对应配置
+- 不得随意重命名统一样本或文本块字段
+- 保留与当前任务无关的用户改动
+- 除非用户明确要求，否则不得初始化 Git、提交、推送或发布
 
-- Do not commit datasets, weights, indexes, caches, secrets, or environments.
-- Do not delete `data/raw/`; it contains the HotpotQA cache.
-- Do not modify planning PDFs or files outside this project.
-- Do not overwrite experiment results without recording their configuration.
-- Do not casually rename unified sample or chunk fields.
-- Preserve unrelated user changes.
-- Do not initialize Git, commit, push, or publish unless the user asks.
+## 阶段交接
 
-## Stage Handoff
+每完成一个阶段：
 
-At every completed stage:
+1. 根据 `TODO.md` 检查验收标准
+2. 在 `PROJECT_STATUS.md` 记录实际执行的命令和结果
+3. 把下一阶段放在 `TODO.md` 的第一个章节
+4. 只有长期规则或命令发生变化时才更新本文件
 
-1. Verify the acceptance criteria in `TODO.md`.
-2. Record measured commands and outcomes in `PROJECT_STATUS.md`.
-3. Make the next stage the first section of `TODO.md`.
-4. Update this file only when durable rules or commands change.
-
-New-window prompt:
+新窗口提示词：
 
 ```text
-璇诲彇 PROJECT_STATUS.md銆乀ODO.md 鍜?AGENTS.md锛岀户缁?RAG 椤圭洰銆?```
+读取 PROJECT_STATUS.md、TODO.md、AGENTS.md 和可选的 AGENTS.local.md，继续 RAG 项目。
+```

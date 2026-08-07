@@ -40,7 +40,7 @@ class RAGService:
             device=str(config["device"]),
             seed=int(config["seed"]),
             cache_folder=config.get("cache_folder"),
-            local_files_only=bool(config.get("local_files_only", True)),
+            local_files_only=bool(config.get("local_files_only", False)),
         )
         self._bm25_index = BM25Index(self._dense_index.chunks)
         self._batch_size = int(config["batch_size"])
@@ -51,7 +51,7 @@ class RAGService:
         self._reranker = CrossEncoderReranker(
             TransformersCrossEncoderScorer(
                 str(reranker_config["model_name"]),
-                cache_dir=str(reranker_config["cache_dir"]),
+                cache_dir=reranker_config.get("cache_dir"),
                 device=str(reranker_config["device"]),
                 local_files_only=bool(reranker_config["local_files_only"]),
                 max_length=int(reranker_config["max_length"]),
@@ -60,7 +60,7 @@ class RAGService:
         )
         self._generator = LocalGroundedGenerator(
             cache_dir=config.get("cache_folder"),
-            local_files_only=True,
+            local_files_only=bool(config.get("local_files_only", False)),
         )
         self._samples = self._collect_samples()
 

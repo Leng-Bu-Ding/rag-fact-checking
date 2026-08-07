@@ -76,7 +76,7 @@ def ensure_valid_citations(
 
 
 class LocalGroundedGenerator:
-    """Small offline FLAN-T5 generator constrained by retrieved evidence."""
+    """Small local FLAN-T5 generator constrained by retrieved evidence."""
 
     def __init__(
         self,
@@ -84,7 +84,7 @@ class LocalGroundedGenerator:
         *,
         cache_dir: str | None = None,
         device: str = "cpu",
-        local_files_only: bool = True,
+        local_files_only: bool = False,
     ) -> None:
         if device != "cpu":
             raise ValueError("the MVP generator currently supports CPU only")

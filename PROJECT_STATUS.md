@@ -1,98 +1,91 @@
-﻿# Project Status
+# 项目状态
 
-Last updated: 2026-08-03
+最后更新：2026-08-07
 
-## Current Stage
+## 当前阶段
 
-The measured HotpotQA 100-sample interview MVP is complete. It now includes a
-fixed development/test split, leakage-free Hybrid RRF tuning, Cross-Encoder
-reranking, multi-hop retrieval metrics, grounded-answer evaluation, explicit
-out-of-domain abstention, FastAPI, and a browser UI.
+HotpotQA 100 样本面试版 MVP 已完成并得到测量。当前系统包含固定的开发集/
+测试集划分、无数据泄漏的 Hybrid RRF 调参、Cross-Encoder 重排序、多跳检索
+指标、基于证据的答案评估、明确的域外拒答、FastAPI 和浏览器页面。
 
-The next milestone is scale and model quality: run a larger HotpotQA corpus,
-replace the weak FLAN-T5-small generator, then transfer the same framework to
-PubMedQA.
+Git 基线已经建立。公开配置不再依赖具体电脑：Hugging Face 默认使用标准
+缓存目录，也可以通过 Git 之外的 `HF_HOME` 指定本机缓存；模型不存在时
+允许首次下载。
 
-## Verified Local Demo
+下一阶段重点是扩大数据规模和提升模型质量：先运行更大的 HotpotQA 语料，
+再替换较弱的 FLAN-T5-small 生成器，最后把同一套框架迁移到 PubMedQA。
 
-- Web UI: http://127.0.0.1:8000
-- API docs: http://127.0.0.1:8000/docs
-- Knowledge chunks: 1,778 from 100 HotpotQA validation samples.
-- Embedding model: sentence-transformers/all-MiniLM-L6-v2, 384 dimensions.
-- Reranker: cross-encoder/ms-marco-MiniLM-L-6-v2, local CPU execution.
-- Generator: google/flan-t5-small, local CPU execution.
-- Model cache: D:\Tools\HuggingFaceCache\hub.
-- Final automated test run: 39 passed in 3.15s.
-- Python compilation check: passed.
-- Verified supported question returns the correct answer with two evidence
-  citations in about 403 ms after model warm-up.
-- Verified unsupported question returns an explicit insufficient-evidence answer.
+## 已验证的本地演示
 
-## Fixed-Split Retrieval Experiment
+- Web 页面：http://127.0.0.1:8000
+- API 文档：http://127.0.0.1:8000/docs
+- 知识库：100 条 HotpotQA 验证样本生成的 1,778 个文本块
+- Embedding 模型：`sentence-transformers/all-MiniLM-L6-v2`，384 维
+- 重排序模型：`cross-encoder/ms-marco-MiniLM-L-6-v2`，CPU 本地运行
+- 生成模型：`google/flan-t5-small`，CPU 本地运行
+- 模型缓存：Hugging Face 标准解析规则，可选 `HF_HOME`
+- 最近完整测试：42 项通过，耗时 4.62 秒
+- Dense 真实模型缓存烟雾测试：在 `HF_HUB_OFFLINE=1` 下通过
+- Python 编译检查：通过
+- 支持的问题能够返回正确答案和两条证据引用，模型预热后约 403 ms
+- 不受语料支持的问题会明确返回证据不足
 
-Input: 100 questions, 1,778 chunks, and 243 unique supporting facts. The split
-is deterministic: 20 development questions for RRF parameter selection and 80
-untouched test questions. Split SHA-256:
-08c3e1aa1a8fe2844f899684db7e1cfd1d2f0915e31edafe1b17c8a795891660.
+## 固定划分检索实验
 
-| System | Hit@1 | Hit@5 | Recall@5 | Complete@5 | Recall@10 | Complete@10 | MRR |
+输入为 100 条问题、1,778 个文本块和 243 条去重标准证据。固定划分为
+20 条开发集问题和 80 条测试集问题。划分 SHA-256：
+`08c3e1aa1a8fe2844f899684db7e1cfd1d2f0915e31edafe1b17c8a795891660`。
+
+| 系统 | Hit@1 | Hit@5 | Recall@5 | Complete@5 | Recall@10 | Complete@10 | MRR |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | BM25 | 0.8000 | 0.9625 | 0.7165 | 0.4375 | 0.8258 | 0.6375 | 0.8748 |
 | Dense FAISS | 0.7750 | 0.9500 | 0.6965 | 0.4250 | 0.8104 | 0.5875 | 0.8614 |
 | Hybrid RRF | 0.8375 | 1.0000 | 0.7404 | 0.4500 | 0.8413 | 0.6500 | 0.9004 |
-| Cross-Encoder reranked | 0.9000 | 0.9875 | 0.7946 | 0.5750 | 0.9094 | 0.8000 | 0.9378 |
+| Cross-Encoder 重排序 | 0.9000 | 0.9875 | 0.7946 | 0.5750 | 0.9094 | 0.8000 | 0.9378 |
 
-RRF selected candidate_k=10 and rrf_k=10 on development data only.
-Cross-Encoder reranking adds about 428 ms per query on CPU. At Recall@10 it
-improved 14 test questions, regressed 2, and tied 64 relative to Hybrid.
+RRF 只使用开发集选择出 `candidate_k=10` 和 `rrf_k=10`。Cross-Encoder 在
+CPU 上每条问题增加约 428 ms。与 Hybrid 相比，它在 Recall@10 上改善
+14 条测试问题、退化 2 条、持平 64 条。
 
-The complete report, including per-question evidence and error cases, is
-results/hotpotqa_retrieval_core_sample100.json.
+包含逐问题证据和错误分析的完整本地报告位于：
+`results/hotpotqa_retrieval_core_sample100.json`。
 
-## Grounded-Answer Experiment
+## 基于证据的答案实验
 
-The same 80 test questions were generated from the top three reranked evidence
-chunks.
+使用相同的 80 条测试问题，并根据重排序后的前三个证据块生成答案。
 
-| Metric | Result |
+| 指标 | 结果 |
 |---|---:|
 | Exact Match | 0.3375 |
 | Token F1 | 0.4256 |
-| Has citation | 1.0000 |
-| Citation validity | 1.0000 |
-| Citation precision | 0.7333 |
-| Citation gold-fact recall | 0.5925 |
-| Generation latency | 300 ms/query |
+| 包含引用 | 1.0000 |
+| 引用有效率 | 1.0000 |
+| 引用精确率 | 0.7333 |
+| 标准证据引用召回率 | 0.5925 |
+| 生成延迟 | 300 ms/问题 |
 
-This deliberately separates retrieval quality from answer quality. Retrieval
-is strong for the current benchmark, while FLAN-T5-small is the main quality
-bottleneck. The complete report is
-results/hotpotqa_generation_sample100_test80.json.
+这部分有意把检索质量和答案质量分开衡量。当前检索在该基准上表现较强，
+FLAN-T5-small 是主要质量瓶颈。完整本地报告位于：
+`results/hotpotqa_generation_sample100_test80.json`。
 
-## Reproducibility And Safety Decisions
+## 可复现性与安全决策
 
-- Use D:\Projects\rag-fact-checking\.conda\python.exe; never assume Python is
-  globally available.
-- Retrieval never indexes answer text or gold labels.
-- Gold facts are deduplicated by (sample_id, title, sentence_id).
-- BM25, Dense, Hybrid, and Reranker are evaluated on identical test IDs.
-- RRF parameters are selected on development IDs only.
-- Reports record data hashes, split IDs, configuration, per-query metrics,
-  latency, improvements, and regressions.
-- Equal scores are resolved by deterministic chunk ID ordering.
-- The service rejects clear out-of-domain questions with no lexical connection
-  to retrieved evidence.
-- The service remains local-only and has not been exposed to the public
-  internet.
+- 使用项目自己的 Python 3.11 环境
+- 机器专属模型缓存路径不进入 Git 跟踪配置
+- 默认允许首次下载，只在明确需要时开启离线模式
+- 检索器不会索引答案文本或标准答案标签
+- 标准证据按 `(sample_id, title, sentence_id)` 去重
+- BM25、Dense、Hybrid 和 Reranker 使用完全相同的测试样本 ID
+- RRF 参数只根据开发集选择
+- 报告记录数据哈希、划分 ID、配置、逐问题指标、延迟、提升和退化
+- 分数相同时按确定性的 chunk ID 顺序处理
+- 服务会拒绝与检索证据没有词汇联系的明确域外问题
+- 服务仍然只在本地运行，尚未暴露到公网
 
-## Remaining Risks
+## 剩余风险
 
-- The measured corpus is a 100-sample benchmark, not the full HotpotQA
-  validation corpus.
-- FLAN-T5-small answer quality is not production-grade.
-- Lexical out-of-domain rejection handles clear misses but is not a calibrated
-  semantic confidence model.
-- Public deployment still requires hosting, authentication, monitoring, and
-  cost-control decisions.
-- The repository has not been initialized as Git because the user has not
-  requested it.
+- 当前只测量了 100 样本，并非完整 HotpotQA 验证集
+- FLAN-T5-small 的答案质量没有达到生产水平
+- 当前词汇域外拒答能处理明显错误，但不是校准后的语义置信度模型
+- 公网部署仍需要主机、鉴权、监控和成本控制决策
+- 仍需在第二台电脑或隔离目录中验证全新的 clone 能否从零复现

@@ -1,45 +1,42 @@
-﻿# TODO
+# 待办事项
 
-Last updated: 2026-08-03
+最后更新：2026-08-07
 
-## Next Milestone: HotpotQA Scale And Answer Quality
+## 下一里程碑：扩大 HotpotQA 规模并提升答案质量
 
-Goal: preserve the completed, reproducible 100-sample retrieval benchmark while
-scaling data and replacing the weak local generator.
+目标：保留已经完成且可复现的 100 样本检索基准，同时扩大数据规模并替换
+较弱的本地生成器。
 
-- [ ] Run a larger HotpotQA validation subset and record CPU time, memory, and
-  index size before attempting the full split.
-- [ ] Replace or augment FLAN-T5-small with a stronger instruction model/API and
-  compare Exact Match, Token F1, citations, latency, and cost.
-- [ ] Calibrate semantic abstention on supported and unsupported question sets.
-- [ ] Add claim-level faithfulness evaluation instead of treating citation
-  presence as proof of faithfulness.
-- [ ] Add repeatable demo stop/status commands and structured request logs.
-- [ ] Make an explicit local-only versus public-hosting decision.
-- [ ] After HotpotQA scaling, transfer the same interfaces and reports to
-  PubMedQA.
+- [ ] 先运行更大的 HotpotQA 验证集子集，记录 CPU 时间、内存和索引大小，
+  再决定是否运行完整验证集
+- [ ] 使用更强的指令模型或 API 替换/补充 FLAN-T5-small，并比较
+  Exact Match、Token F1、引用、延迟和成本
+- [ ] 在有答案和无答案问题集合上校准语义拒答机制
+- [ ] 增加 claim-level faithfulness 评估，不能只用“存在引用”代替忠实度
+- [ ] 增加可重复执行的演示停止/状态命令和结构化请求日志
+- [ ] 明确选择只做本地演示还是部署到公网
+- [ ] HotpotQA 扩展完成后，把相同接口和报告迁移到 PubMedQA
 
-## Completed: HotpotQA 100-Sample Interview MVP
+## 已完成：HotpotQA 100 样本面试版 MVP
 
-- [x] Deterministic 20-development / 80-test split with a recorded hash.
-- [x] Common BM25, Dense, Hybrid, and Reranker interfaces.
-- [x] Leakage-free RRF grid tuning on development IDs only.
-- [x] Cross-Encoder reranking with measured CPU latency.
-- [x] Hit, Recall, MRR, Complete, gold-document recall, and novelty-aware
-  fact-NDCG metrics.
-- [x] Per-question improvement/regression records for error analysis.
-- [x] Grounded-answer Exact Match and Token F1 evaluation.
-- [x] Citation presence, validity, precision, and gold-fact recall evaluation.
-- [x] Explicit rejection for clear out-of-domain questions.
-- [x] Cross-Encoder integrated into the FastAPI/browser demo.
-- [x] Reproducible JSON experiment reports with source and split hashes.
-- [x] 39 passing automated tests plus compilation and real-model smoke checks.
+- [x] 固定且可复现的 20 条开发集 / 80 条测试集划分及其哈希
+- [x] 统一的 BM25、Dense、Hybrid 和 Reranker 接口
+- [x] 只在开发集进行、无数据泄漏的 RRF 网格调参
+- [x] Cross-Encoder 重排序及其 CPU 延迟测量
+- [x] Hit、Recall、MRR、Complete、标准文档召回和 fact-NDCG 指标
+- [x] 逐问题提升/退化记录和错误分析
+- [x] 答案 Exact Match 和 Token F1 评估
+- [x] 引用存在率、有效率、精确率和标准证据召回率评估
+- [x] 对明显域外问题的明确拒答
+- [x] 将 Cross-Encoder 接入 FastAPI 和浏览器演示
+- [x] 带来源哈希和划分哈希的可复现 JSON 实验报告
+- [x] 不依赖具体电脑的模型缓存配置，并允许首次下载
+- [x] 自动化测试、Python 编译检查和真实模型烟雾测试
 
-## Stage Acceptance
+## 阶段验收结论
 
-The 100-sample HotpotQA milestone is accepted because retrieval, generation,
-citations, abstention, latency, and error cases are measured separately on a
-fixed split, and the same pipeline is available through the local demo.
+100 样本 HotpotQA 阶段已经验收，因为检索、生成、引用、拒答、延迟和错误
+案例都在固定划分上被分别测量，而且同一条流水线可以通过本地演示使用。
 
-This does not claim that the full HotpotQA dataset or public production
-deployment is complete. Those are the next scale and operations milestones.
+这不代表完整 HotpotQA 数据集或公网生产部署已经完成；扩大规模和补齐运维
+能力属于下一阶段。

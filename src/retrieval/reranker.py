@@ -30,7 +30,7 @@ class TransformersCrossEncoderScorer:
         *,
         cache_dir: str | None = None,
         device: str = "cpu",
-        local_files_only: bool = True,
+        local_files_only: bool = False,
         max_length: int = 512,
     ) -> None:
         if not model_name.strip():

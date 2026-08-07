@@ -11,7 +11,7 @@ dense:
   model_name: sentence-transformers/all-MiniLM-L6-v2
   revision: null
   device: cpu
-  cache_folder: D:/Tools/HuggingFaceCache/hub
-  local_files_only: true
+  cache_folder: null
+  local_files_only: false
   batch_size: 32
   seed: 42

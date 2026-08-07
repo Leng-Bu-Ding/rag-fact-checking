@@ -236,7 +236,7 @@ def main() -> None:
         )
         scorer = TransformersCrossEncoderScorer(
             str(reranker_config["model_name"]),
-            cache_dir=str(reranker_config["cache_dir"]),
+            cache_dir=reranker_config.get("cache_dir"),
             device=str(reranker_config["device"]),
             local_files_only=bool(reranker_config["local_files_only"]),
             max_length=int(reranker_config["max_length"]),

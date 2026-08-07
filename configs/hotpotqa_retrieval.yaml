@@ -17,8 +17,8 @@ hotpotqa_retrieval:
     model_name: sentence-transformers/all-MiniLM-L6-v2
     revision: null
     device: cpu
-    cache_folder: D:/Tools/HuggingFaceCache/hub
-    local_files_only: true
+    cache_folder: null
+    local_files_only: false
     batch_size: 32
   hybrid_search:
     candidate_ks: [10, 20, 50]
@@ -26,8 +26,8 @@ hotpotqa_retrieval:
   reranker:
     enabled: true
     model_name: cross-encoder/ms-marco-MiniLM-L-6-v2
-    cache_dir: D:/Tools/HuggingFaceCache/hub
-    local_files_only: true
+    cache_dir: null
+    local_files_only: false
     device: cpu
     max_length: 512
     batch_size: 32
