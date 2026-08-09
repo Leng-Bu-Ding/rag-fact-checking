@@ -1,91 +1,114 @@
 # 项目状态
 
-最后更新：2026-08-07
+最后更新：2026-08-08
 
 ## 当前阶段
 
-HotpotQA 100 样本面试版 MVP 已完成并得到测量。当前系统包含固定的开发集/
-测试集划分、无数据泄漏的 Hybrid RRF 调参、Cross-Encoder 重排序、多跳检索
-指标、基于证据的答案评估、明确的域外拒答、FastAPI 和浏览器页面。
+8 月 15 日首发计划中的本地可执行部分已推进到：
 
-Git 基线已经建立。公开配置不再依赖具体电脑：Hugging Face 默认使用标准
-缓存目录，也可以通过 Git 之外的 `HF_HOME` 指定本机缓存；模型不存在时
-允许首次下载。
+- HotpotQA：检索核心完成；生成可信度问题已修正并重测。
+- FinanceBench：数据适配、真实 PDF、页码验证、页内 Chunk、Global / Document-scoped 检索、Calculator 和 API 生成流水线完成。
+- 求职交付：中文 README 与可提交结果摘要正在验收。
+- 外部阻塞：真实 API 生成评测需要 Key；医疗 QLoRA 重训需要 24GB GPU；第二个公开仓库需要创建远端。
 
-下一阶段重点是扩大数据规模和提升模型质量：先运行更大的 HotpotQA 语料，
-再替换较弱的 FLAN-T5-small 生成器，最后把同一套框架迁移到 PubMedQA。
+“代码存在”与“实验完成”严格分开：FinanceBench 当前没有答案准确率；医疗项目
+当前只有历史 50 题结果，不能写成新 300 题实验。
 
-## 已验证的本地演示
+## FinanceBench 数据验收
 
-- Web 页面：http://127.0.0.1:8000
-- API 文档：http://127.0.0.1:8000/docs
-- 知识库：100 条 HotpotQA 验证样本生成的 1,778 个文本块
-- Embedding 模型：`sentence-transformers/all-MiniLM-L6-v2`，384 维
-- 重排序模型：`cross-encoder/ms-marco-MiniLM-L-6-v2`，CPU 本地运行
-- 生成模型：`google/flan-t5-small`，CPU 本地运行
-- 模型缓存：Hugging Face 标准解析规则，可选 `HF_HOME`
-- 最近完整测试：42 项通过，耗时 4.62 秒
-- Dense 真实模型缓存烟雾测试：在 `HF_HUB_OFFLINE=1` 下通过
-- Python 编译检查：通过
-- 支持的问题能够返回正确答案和两条证据引用，模型预热后约 403 ms
-- 不受语料支持的问题会明确返回证据不足
+- 公开数据：150 题、84 份唯一文档。
+- 有效语料：62 份 PDF、114 题、8,987 页、18,975 Chunks。
+- 问题覆盖率：76.00%；文档覆盖率：73.81%。
+- 已覆盖 gold evidence：143/143 在转换后的 1-based PDF 页精确匹配。
+- 未转换的 0-based 页匹配：0/143，证明源字段需要 `+1`。
+- 泄漏检查：索引 Chunk 中 question=0、answer=0、gold label=0。
+- 5 份替代 PDF 因版式/分页不一致被隔离，没有进入索引。
+- Dense 增量索引：复用 18,490 个向量，重新编码 485 个。
 
-## 固定划分检索实验
+完整失败文档、URL 错误和逐题结果位于本地
+`results/financebench_retrieval.json`；Git 只提交去逐题化摘要。
 
-输入为 100 条问题、1,778 个文本块和 243 条去重标准证据。固定划分为
-20 条开发集问题和 80 条测试集问题。划分 SHA-256：
+## FinanceBench 检索结果
+
+114 题固定语料，Ranking depth 50，报告 Top-1/5/10。
+
+### Global
+
+| 系统 | Document Hit@10 | Page Hit@10 | Page Recall@10 | MRR | 主要 CPU 延迟 |
+|---|---:|---:|---:|---:|---:|
+| BM25 | 0.5614 | 0.0702 | 0.0702 | 0.0337 | 327.88 ms/q |
+| Dense | **0.9737** | **0.3772** | **0.3377** | **0.1768** | Query encode 38.82 + search 81.40 ms/q |
+| Hybrid | 0.9035 | 0.2456 | 0.2368 | 0.1129 | Fusion 0.26 ms/q |
+| Reranker | 0.9561 | 0.3421 | 0.3158 | 0.1697 | 2,825.80 ms/q |
+
+### Document-scoped
+
+| 系统 | Page Hit@10 | Page Recall@10 | MRR | 主要 CPU 延迟 |
+|---|---:|---:|---:|---:|
+| BM25 | 0.2544 | 0.2544 | 0.1820 | 66.02 ms/q |
+| Dense | **0.5965** | **0.5614** | **0.2925** | 4.49 ms/q（不含共享 Query encode） |
+| Hybrid | 0.4298 | 0.4079 | 0.2175 | Fusion 0.19 ms/q |
+| Reranker | 0.5439 | 0.5044 | 0.2637 | 2,748.37 ms/q |
+
+Dense 是当前最强方案。Cross-Encoder 改善 Hybrid 但未超过 Dense，且延迟显著。
+Global Dense Top-10 的 71 个失败中，68 个属于“正确财报已找到但证据页错误”，
+3 个属于“正确财报未进入 Top-10”。
+
+## FinanceBench 生成状态
+
+已实现 OpenAI-compatible 结构化 Generator、安全 AST Calculator、模型引用校验、
+断点续跑、token/延迟/模型元数据记录。最终 dry-run 结果：
+
+- Document-scoped Dense Top-5。
+- 114 题。
+- 100% 引用页来自真实 PDF。
+- 平均 Prompt 9,074.18 字符。
+- 未发送 API 请求，未生成答案指标。
+
+## HotpotQA 结果
+
+检索设置：100 条 validation，20 Dev / 80 Test，Seed 42，Split SHA-256：
 `08c3e1aa1a8fe2844f899684db7e1cfd1d2f0915e31edafe1b17c8a795891660`。
 
-| 系统 | Hit@1 | Hit@5 | Recall@5 | Complete@5 | Recall@10 | Complete@10 | MRR |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| BM25 | 0.8000 | 0.9625 | 0.7165 | 0.4375 | 0.8258 | 0.6375 | 0.8748 |
-| Dense FAISS | 0.7750 | 0.9500 | 0.6965 | 0.4250 | 0.8104 | 0.5875 | 0.8614 |
-| Hybrid RRF | 0.8375 | 1.0000 | 0.7404 | 0.4500 | 0.8413 | 0.6500 | 0.9004 |
-| Cross-Encoder 重排序 | 0.9000 | 0.9875 | 0.7946 | 0.5750 | 0.9094 | 0.8000 | 0.9378 |
+Cross-Encoder Test：Hit@1 0.9000、Recall@10 0.9094、Complete@10 0.8000、
+MRR 0.9378；CPU 增量延迟 427.80 ms/q。
 
-RRF 只使用开发集选择出 `candidate_k=10` 和 `rrf_k=10`。Cross-Encoder 在
-CPU 上每条问题增加约 428 ms。与 Hybrid 相比，它在 Recall@10 上改善
-14 条测试问题、退化 2 条、持平 64 条。
+可信度修复：删除 nationality 特例、Title Promotion 和强制引用注入。修复后
+FLAN-T5-small 80 题生成结果：
 
-包含逐问题证据和错误分析的完整本地报告位于：
-`results/hotpotqa_retrieval_core_sample100.json`。
+- EM 0.2625；Token F1 0.3518。
+- Has Citation 0.1500；Citation Validity 0.1500。
+- Citation Precision 0.1500；Gold-fact Citation Recall 0.0667。
+- 生成延迟 518.81 ms/q。
 
-## 基于证据的答案实验
+旧的 100% 引用报告已保存为
+`results/hotpotqa_generation_sample100_test80_pre_citation_fix_invalid.json`，明确视为
+无效历史结果，不用于 README、简历或 Notion 结论。
 
-使用相同的 80 条测试问题，并根据重排序后的前三个证据块生成答案。
+## 2026-08-07 实际执行记录
 
-| 指标 | 结果 |
-|---|---:|
-| Exact Match | 0.3375 |
-| Token F1 | 0.4256 |
-| 包含引用 | 1.0000 |
-| 引用有效率 | 1.0000 |
-| 引用精确率 | 0.7333 |
-| 标准证据引用召回率 | 0.5925 |
-| 生成延迟 | 300 ms/问题 |
+```powershell
+& '.\.conda\python.exe' '.\scripts\prepare_financebench.py' ...
+& '.\.conda\python.exe' '.\scripts\validate_financebench_pages.py'
+& '.\.conda\python.exe' '.\scripts\run_financebench_retrieval_experiment.py'
+& '.\.conda\python.exe' '.\scripts\run_hotpotqa_generation_evaluation.py'
+& '.\.conda\python.exe' '.\scripts\run_financebench_generation_evaluation.py' --dry-run
+& '.\.conda\python.exe' '.\scripts\publish_experiment_summaries.py'
+```
 
-这部分有意把检索质量和答案质量分开衡量。当前检索在该基准上表现较强，
-FLAN-T5-small 是主要质量瓶颈。完整本地报告位于：
-`results/hotpotqa_generation_sample100_test80.json`。
+最终验收：59 项测试全部通过（3.85 秒），`compileall` 通过，公开摘要可重复
+生成。Demo 使用线程安全单例与启动预热；冷启动 49.6 秒后 ready，
+实际样例回答 `Scotch Collie`，检索 40.16 ms、重排 422.23 ms、生成
+430.95 ms、总计 893.34 ms。
 
-## 可复现性与安全决策
+Notion 的 EvalRAG 首页、Roadmap、Atomic Actions 和 Experiments & Results 已于
+2026-08-08 按实际结果更新；原有子页保留，旧的 100% 引用结论已移除。
 
-- 使用项目自己的 Python 3.11 环境
-- 机器专属模型缓存路径不进入 Git 跟踪配置
-- 默认允许首次下载，只在明确需要时开启离线模式
-- 检索器不会索引答案文本或标准答案标签
-- 标准证据按 `(sample_id, title, sentence_id)` 去重
-- BM25、Dense、Hybrid 和 Reranker 使用完全相同的测试样本 ID
-- RRF 参数只根据开发集选择
-- 报告记录数据哈希、划分 ID、配置、逐问题指标、延迟、提升和退化
-- 分数相同时按确定性的 chunk ID 顺序处理
-- 服务会拒绝与检索证据没有词汇联系的明确域外问题
-- 服务仍然只在本地运行，尚未暴露到公网
+## 未完成与风险
 
-## 剩余风险
-
-- 当前只测量了 100 样本，并非完整 HotpotQA 验证集
-- FLAN-T5-small 的答案质量没有达到生产水平
-- 当前词汇域外拒答能处理明显错误，但不是校准后的语义置信度模型
-- 公网部署仍需要主机、鉴权、监控和成本控制决策
-- 仍需在第二台电脑或隔离目录中验证全新的 clone 能否从零复现
+- 22 份财报未通过下载或页码一致性校验，不能声称 150/150。
+- FinanceBench 真实答案、数值准确率、成本尚未测量。
+- 通用 MiniLM 和 MS MARCO Cross-Encoder 存在金融域偏移。
+- PDF 表格目前按文本抽取，复杂表格结构可能丢失。
+- HotpotQA 本地生成器引用能力弱；引用有效不等于 claim-level faithfulness。
+- Docker、公网页面、鉴权、日志和监控按首发计划暂缓。

@@ -1,0 +1,8 @@
+demo:
+  # These examples were exact-match successes in the honest 80-question report.
+  # Aggregate quality and failures remain visible in results/public/.
+  showcase_sample_ids:
+    - "5a7a0e1e5542990783324e1a"
+    - "5a7cc50e554299452d57ba3e"
+    - "5a80b3a9554299485f5986cc"
+    - "5a828c8355429966c78a6a50"

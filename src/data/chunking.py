@@ -24,6 +24,11 @@ class DocumentChunk:
     end_sentence_id: int
     supporting_sentence_ids: list[int]
     contains_supporting_fact: bool
+    page_number: int | None = None
+    company: str | None = None
+    document_type: str | None = None
+    document_period: str | None = None
+    source_url: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

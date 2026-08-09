@@ -13,11 +13,18 @@ from src.retrieval.reranker import (
     CrossEncoderReranker,
     TransformersCrossEncoderScorer,
 )
-from src.retrieval.hybrid import (
-    prioritize_title_mentions,
-    reciprocal_rank_fusion,
-)
+from src.retrieval.hybrid import reciprocal_rank_fusion
 from src.utils.config import load_config
+
+
+def order_demo_samples(
+    samples: list[dict[str, str]], showcase_sample_ids: list[str]
+) -> list[dict[str, str]]:
+    by_id = {item["sample_id"]: item for item in samples}
+    ordered = [by_id[sample_id] for sample_id in showcase_sample_ids if sample_id in by_id]
+    selected = {item["sample_id"] for item in ordered}
+    ordered.extend(item for item in samples if item["sample_id"] not in selected)
+    return ordered
 
 
 class RAGService:
@@ -62,7 +69,11 @@ class RAGService:
             cache_dir=config.get("cache_folder"),
             local_files_only=bool(config.get("local_files_only", False)),
         )
-        self._samples = self._collect_samples()
+        demo_config = load_config(root / "configs" / "demo.yaml")["demo"]
+        self._samples = order_demo_samples(
+            self._collect_samples(),
+            [str(value) for value in demo_config["showcase_sample_ids"]],
+        )
 
     def _collect_samples(self) -> list[dict[str, str]]:
         seen: set[str] = set()
@@ -123,14 +134,16 @@ class RAGService:
             top_k=max(10, top_k * 2),
         )
         reranking_finished = time.perf_counter()
-        results = prioritize_title_mentions(question, reranked, top_k=top_k)
+        results = reranked[:top_k]
         answer = self._generator.generate(question, results)
         finished = time.perf_counter()
 
         return {
             "question": question,
             "answer": answer,
-            "retriever": "hybrid_rrf",
+            "retriever": "hybrid_rrf_cross_encoder",
+            "score_type": "cross_encoder_logit",
+            "citation_mode": "model_generated_validated",
             "evidence": [
                 {
                     "citation": index,

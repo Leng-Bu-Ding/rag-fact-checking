@@ -37,25 +37,12 @@ def evidence_is_insufficient(
     return question_terms.isdisjoint(evidence_terms)
 
 
-def _fallback_citations(
-    question: str,
-    results: Sequence[RetrievalResult],
-) -> list[int]:
-    lowered = question.casefold()
-    title_matches = [
-        index
-        for index, result in enumerate(results, start=1)
-        if result.chunk.title.casefold() in lowered
-    ]
-    return title_matches or list(range(1, min(2, len(results)) + 1))
-
-
 def ensure_valid_citations(
     answer: str,
     question: str,
     results: Sequence[RetrievalResult],
 ) -> str:
-    """Ensure an answer exposes only citation IDs present in its evidence."""
+    """Remove invalid citation IDs without inventing model attribution."""
     valid = {
         int(match)
         for match in _CITATION_RE.findall(answer)
@@ -67,12 +54,7 @@ def ensure_valid_citations(
         else "",
         answer,
     ).strip()
-    if valid or not results:
-        return cleaned
-    citations = " ".join(
-        f"[{index}]" for index in _fallback_citations(question, results)
-    )
-    return f"{cleaned} {citations}".strip()
+    return cleaned
 
 
 class LocalGroundedGenerator:
@@ -113,46 +95,6 @@ class LocalGroundedGenerator:
     def metadata(self) -> dict[str, Any]:
         return dict(self._metadata)
 
-    def _high_confidence_comparison(
-        self,
-        question: str,
-        results: Sequence[RetrievalResult],
-    ) -> str | None:
-        lowered = question.casefold()
-        if "same nationality" not in lowered:
-            return None
-        nationalities = (
-            "American", "British", "English", "French", "German", "Italian",
-            "Canadian", "Australian", "Indian", "Chinese", "Japanese",
-            "Korean", "Spanish", "Irish", "Scottish", "Dutch", "Russian",
-            "Swedish", "Norwegian", "Danish", "Finnish", "Brazilian",
-            "Mexican", "Turkish", "Greek", "Polish", "Austrian", "Swiss",
-        )
-        matches: list[tuple[int, str, str]] = []
-        for index, result in enumerate(results, start=1):
-            if result.chunk.title.casefold() not in lowered:
-                continue
-            text = result.chunk.text.casefold()
-            nationality = next(
-                (value for value in nationalities if value.casefold() in text),
-                None,
-            )
-            if nationality:
-                matches.append((index, result.chunk.title, nationality))
-        if len(matches) < 2:
-            return None
-        first, second = matches[:2]
-        citations = f"[{first[0]}] [{second[0]}]"
-        if first[2] == second[2]:
-            return (
-                f"Yes. {first[1]} and {second[1]} were both "
-                f"{first[2]}. {citations}"
-            )
-        return (
-            f"No. {first[1]} was {first[2]}, while {second[1]} was "
-            f"{second[2]}. {citations}"
-        )
-
     def generate(
         self,
         question: str,
@@ -164,16 +106,15 @@ class LocalGroundedGenerator:
         evidence = list(results[:max_evidence])
         if evidence_is_insufficient(question, evidence):
             return "The retrieved evidence is insufficient to answer this question."
-        comparison = self._high_confidence_comparison(question, evidence)
-        if comparison:
-            return comparison
         context = "\n".join(
             f"Evidence {index} - {result.chunk.title}: {result.chunk.text}"
             for index, result in enumerate(evidence, start=1)
         )
         prompt = (
             "Answer the question using only the evidence. Write one concise, "
-            "complete grammatical sentence. Do not output citation numbers. "
+            "complete grammatical sentence and cite supporting evidence with "
+            "bracketed IDs such as [1]. Cite only evidence that directly supports "
+            "the answer. "
             "If the evidence is insufficient, say that it is insufficient.\n\n"
             f"Evidence:\n{context}\n\nQuestion: {question}\nAnswer:"
         )

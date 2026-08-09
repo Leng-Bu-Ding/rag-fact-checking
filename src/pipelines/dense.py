@@ -6,6 +6,8 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+
 from src.data.chunking import DocumentChunk
 from src.evaluation.retrieval import (
     aggregate_metrics,
@@ -39,6 +41,39 @@ def build_dense_index(
     texts = [chunk_text(chunk, include_title=include_title) for chunk in chunks]
     embeddings = encoder.encode_documents(texts, batch_size=batch_size)
     return DenseIndex(chunks, embeddings, normalize=normalize)
+
+
+def build_dense_index_reusing(
+    chunks: Sequence[DocumentChunk],
+    encoder: TextEncoder,
+    previous: DenseIndex,
+    *,
+    batch_size: int,
+    include_title: bool,
+    normalize: bool,
+) -> tuple[DenseIndex, dict[str, int]]:
+    """Reuse unchanged chunk vectors and encode only new chunk IDs."""
+    vectors = {
+        chunk.chunk_id: vector
+        for chunk, vector in zip(
+            previous.chunks, previous.embedding_matrix, strict=True
+        )
+    }
+    missing = [chunk for chunk in chunks if chunk.chunk_id not in vectors]
+    if missing:
+        encoded = encoder.encode_documents(
+            [chunk_text(chunk, include_title=include_title) for chunk in missing],
+            batch_size=batch_size,
+        )
+        vectors.update(
+            (chunk.chunk_id, vector)
+            for chunk, vector in zip(missing, encoded, strict=True)
+        )
+    matrix = np.stack([vectors[chunk.chunk_id] for chunk in chunks])
+    return DenseIndex(chunks, matrix, normalize=normalize), {
+        "reused_chunk_count": len(chunks) - len(missing),
+        "encoded_chunk_count": len(missing),
+    }
 
 
 def search_dense(

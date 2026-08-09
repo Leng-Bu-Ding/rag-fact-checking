@@ -1,0 +1,58 @@
+financebench:
+  questions_path: data/raw/financebench/questions.jsonl
+  document_manifest_path: data/raw/financebench/document_manifest.json
+  alternate_urls_path: configs/financebench_alternate_urls.json
+  chunks_path: data/processed/financebench_chunks.jsonl
+  dense_index_dir: data/index/financebench_dense
+  retrieval_output_path: results/financebench_retrieval.json
+  dataset:
+    name: PatronusAI/financebench
+    config: default
+    split: train
+    cache_dir: null
+  download:
+    workers: 6
+    timeout_seconds: 90
+  chunking:
+    chunk_words: 350
+    overlap_words: 50
+  evaluation:
+    top_ks: [1, 5, 10]
+    ranking_depth: 50
+  bm25:
+    include_title: true
+    k1: 1.5
+    b: 0.75
+    epsilon: 0.25
+  dense:
+    model_name: sentence-transformers/all-MiniLM-L6-v2
+    revision: null
+    device: cpu
+    cache_folder: null
+    local_files_only: false
+    batch_size: 128
+    normalize: true
+    include_title: true
+  hybrid:
+    candidate_k: 50
+    rrf_k: 60
+  reranker:
+    enabled: true
+    model_name: cross-encoder/ms-marco-MiniLM-L-6-v2
+    cache_dir: null
+    local_files_only: false
+    device: cpu
+    max_length: 512
+    batch_size: 32
+    candidate_k: 20
+  generation:
+    retrieval_scope: document
+    retrieval_system: dense
+    top_k: 5
+    provider: openai-compatible
+    base_url_env: RAG_API_BASE_URL
+    api_key_env: RAG_API_KEY
+    model_env: RAG_API_MODEL
+    timeout_seconds: 90
+    predictions_path: results/financebench_generation_predictions.jsonl
+    summary_path: results/financebench_generation_summary.json

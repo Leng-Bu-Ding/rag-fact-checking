@@ -10,6 +10,7 @@ import pytest
 from src.data.chunking import DocumentChunk
 from src.pipelines.dense import (
     build_dense_index,
+    build_dense_index_reusing,
     compare_reports,
     evaluate_dense,
     search_dense,
@@ -138,6 +139,26 @@ def test_faiss_index_round_trip_preserves_chunks(tmp_path) -> None:
     assert loaded.dimension == 2
     assert manifest["index"]["chunk_count"] == 2
     assert loaded.search_vector([1, 0], top_k=1)[0].chunk.chunk_id == "a"
+
+
+def test_incremental_dense_build_encodes_only_new_chunk_ids() -> None:
+    existing = make_chunk("existing", "alpha")
+    added = make_chunk("added", "beta")
+    previous = DenseIndex([existing], [[1.0, 0.0]])
+    encoder = FakeEncoder({"Document\nbeta": [0.0, 1.0]})
+
+    rebuilt, stats = build_dense_index_reusing(
+        [added, existing],
+        encoder,
+        previous,
+        batch_size=8,
+        include_title=True,
+        normalize=True,
+    )
+
+    assert stats == {"reused_chunk_count": 1, "encoded_chunk_count": 1}
+    assert rebuilt.search_vector([1.0, 0.0], top_k=1)[0].chunk.chunk_id == "existing"
+    assert rebuilt.search_vector([0.0, 1.0], top_k=1)[0].chunk.chunk_id == "added"
 
 
 def test_dense_evaluation_reuses_fact_metrics() -> None:
