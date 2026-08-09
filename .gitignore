@@ -39,8 +39,14 @@ dist/
 data/raw/
 data/processed/
 data/index/
-results/
+results/*
+!results/public/
+!results/public/*.json
+!results/public/*.md
 
 # Operating system
 Thumbs.db
 .DS_Store
+
+# Person
+冷新伟_香港城市大学_nlp应用算法工程师.docx

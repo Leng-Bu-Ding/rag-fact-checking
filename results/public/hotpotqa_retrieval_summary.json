@@ -1,0 +1,151 @@
+{
+  "experiment": "hotpotqa_retrieval_core",
+  "reranker": {
+    "candidate_k": 20,
+    "metadata": {
+      "batch_size": 32,
+      "device": "cpu",
+      "include_title": true,
+      "local_files_only": true,
+      "max_length": 512,
+      "model_name": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+      "provider": "transformers"
+    },
+    "timing": {
+      "milliseconds_per_query": 427.800128,
+      "total_seconds": 34.22401
+    }
+  },
+  "schema_version": 1,
+  "source": {
+    "chunks_path": "data/processed/hotpotqa_bm25_sample100_chunks.jsonl",
+    "chunks_sha256": "5e8c93657a3c7566ea098066b3029789c402a1a7068ea4a7857ef20df785b4f6",
+    "dense_index_manifest": "data/index/hotpotqa_dense_sample100/manifest.json"
+  },
+  "split": {
+    "dev_count": 20,
+    "seed": 42,
+    "sha256": "08c3e1aa1a8fe2844f899684db7e1cfd1d2f0915e31edafe1b17c8a795891660",
+    "test_count": 80
+  },
+  "systems": {
+    "bm25": {
+      "metrics": {
+        "complete_at_1": 0.0,
+        "complete_at_10": 0.6375,
+        "complete_at_5": 0.4375,
+        "fact_ndcg_at_1": 0.8,
+        "fact_ndcg_at_10": 0.67221252,
+        "fact_ndcg_at_5": 0.62602882,
+        "gold_document_recall_at_1": 0.4,
+        "gold_document_recall_at_10": 0.8375,
+        "gold_document_recall_at_5": 0.7125,
+        "hit_at_1": 0.8,
+        "hit_at_10": 1.0,
+        "hit_at_5": 0.9625,
+        "mrr": 0.87482639,
+        "recall_at_1": 0.40604167,
+        "recall_at_10": 0.82583333,
+        "recall_at_5": 0.71645833
+      }
+    },
+    "dense": {
+      "metrics": {
+        "complete_at_1": 0.0,
+        "complete_at_10": 0.5875,
+        "complete_at_5": 0.425,
+        "fact_ndcg_at_1": 0.775,
+        "fact_ndcg_at_10": 0.67206449,
+        "fact_ndcg_at_5": 0.63554848,
+        "gold_document_recall_at_1": 0.3875,
+        "gold_document_recall_at_10": 0.8,
+        "gold_document_recall_at_5": 0.7,
+        "hit_at_1": 0.775,
+        "hit_at_10": 1.0,
+        "hit_at_5": 0.95,
+        "mrr": 0.86136905,
+        "recall_at_1": 0.38125,
+        "recall_at_10": 0.81041667,
+        "recall_at_5": 0.69645833
+      }
+    },
+    "hybrid": {
+      "metrics": {
+        "complete_at_1": 0.0,
+        "complete_at_10": 0.65,
+        "complete_at_5": 0.45,
+        "fact_ndcg_at_1": 0.8375,
+        "fact_ndcg_at_10": 0.69260232,
+        "fact_ndcg_at_5": 0.65385407,
+        "gold_document_recall_at_1": 0.41875,
+        "gold_document_recall_at_10": 0.84375,
+        "gold_document_recall_at_5": 0.73125,
+        "hit_at_1": 0.8375,
+        "hit_at_10": 1.0,
+        "hit_at_5": 1.0,
+        "mrr": 0.90041667,
+        "recall_at_1": 0.42583333,
+        "recall_at_10": 0.84125,
+        "recall_at_5": 0.74041667
+      }
+    },
+    "reranker": {
+      "metrics": {
+        "complete_at_1": 0.0,
+        "complete_at_10": 0.8,
+        "complete_at_5": 0.575,
+        "fact_ndcg_at_1": 0.9,
+        "fact_ndcg_at_10": 0.76360549,
+        "fact_ndcg_at_5": 0.72031543,
+        "gold_document_recall_at_1": 0.45,
+        "gold_document_recall_at_10": 0.90625,
+        "gold_document_recall_at_5": 0.79375,
+        "hit_at_1": 0.9,
+        "hit_at_10": 1.0,
+        "hit_at_5": 0.9875,
+        "mrr": 0.93784722,
+        "recall_at_1": 0.43625,
+        "recall_at_10": 0.909375,
+        "recall_at_5": 0.79458333
+      }
+    }
+  },
+  "timings": {
+    "bm25": {
+      "milliseconds_per_query": 8.863267,
+      "total_seconds": 0.886327
+    },
+    "dense": {
+      "milliseconds_per_query": 7.260282,
+      "total_seconds": 0.726028
+    },
+    "hybrid_fusion": {
+      "milliseconds_per_query": 0.034269,
+      "total_seconds": 0.002742
+    }
+  },
+  "tuning": {
+    "selected": {
+      "candidate_k": 10,
+      "metrics": {
+        "complete_at_1": 0.0,
+        "complete_at_10": 0.8,
+        "complete_at_5": 0.65,
+        "fact_ndcg_at_1": 0.75,
+        "fact_ndcg_at_10": 0.74985324,
+        "fact_ndcg_at_5": 0.71150523,
+        "gold_document_recall_at_1": 0.375,
+        "gold_document_recall_at_10": 0.9,
+        "gold_document_recall_at_5": 0.8,
+        "hit_at_1": 0.75,
+        "hit_at_10": 1.0,
+        "hit_at_5": 0.95,
+        "mrr": 0.84214286,
+        "recall_at_1": 0.36666667,
+        "recall_at_10": 0.9,
+        "recall_at_5": 0.8
+      },
+      "rrf_k": 10
+    }
+  }
+}

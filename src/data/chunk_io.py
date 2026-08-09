@@ -23,6 +23,29 @@ def _chunk_from_record(record: dict[str, Any]) -> DocumentChunk:
             int(value) for value in record["supporting_sentence_ids"]
         ],
         contains_supporting_fact=bool(record["contains_supporting_fact"]),
+        page_number=(
+            int(record["page_number"])
+            if record.get("page_number") is not None
+            else None
+        ),
+        company=(
+            str(record["company"]) if record.get("company") is not None else None
+        ),
+        document_type=(
+            str(record["document_type"])
+            if record.get("document_type") is not None
+            else None
+        ),
+        document_period=(
+            str(record["document_period"])
+            if record.get("document_period") is not None
+            else None
+        ),
+        source_url=(
+            str(record["source_url"])
+            if record.get("source_url") is not None
+            else None
+        ),
     )
 
 

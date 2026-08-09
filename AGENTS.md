@@ -31,6 +31,13 @@
 & '.\.conda\python.exe' '.\scripts\run_dense.py' evaluate
 & '.\.conda\python.exe' '.\scripts\run_hotpotqa_retrieval_experiment.py'
 & '.\.conda\python.exe' '.\scripts\run_hotpotqa_generation_evaluation.py'
+& '.\.conda\python.exe' '.\scripts\prepare_financebench.py' fetch
+& '.\.conda\python.exe' '.\scripts\prepare_financebench.py' download
+& '.\.conda\python.exe' '.\scripts\validate_financebench_pages.py'
+& '.\.conda\python.exe' '.\scripts\prepare_financebench.py' build
+& '.\.conda\python.exe' '.\scripts\run_financebench_retrieval_experiment.py'
+& '.\.conda\python.exe' '.\scripts\run_financebench_generation_evaluation.py' --dry-run
+& '.\.conda\python.exe' '.\scripts\publish_experiment_summaries.py'
 & '.\.conda\python.exe' '.\scripts\start_demo.py'
 & '.\.conda\python.exe' -m pytest -q --basetemp '.\.test_tmp' -p no:cacheprovider
 & '.\.conda\python.exe' -m uvicorn app.api:app --reload
@@ -38,7 +45,7 @@
 
 ## 技术方向
 
-- 主数据集：HotpotQA；跨领域数据集：PubMedQA
+- 算法验证数据集：HotpotQA；金融业务数据集：FinanceBench
 - 配置文件放在 `configs/`
 - 可复用实现放在 `src/`
 - 可执行流水线放在 `scripts/`；HTTP 代码放在 `app/`
@@ -59,6 +66,9 @@
   `(sample_id, title, sentence_id)` 对标准证据去重
 - 除明确的评估或调试输出外，检索器不得看到答案文本或标准标签
 - 基线切块不得拆分 HotpotQA 原始句子
+- FinanceBench 基线切块不得跨 PDF 页；用户页码统一为 1-based
+- FinanceBench 替代 PDF 只有通过 gold 文本页码对齐校验后才能进入语料
+- `results/public/` 只保存由完整本地报告生成的去逐题化真实摘要
 - 行为发生变化时必须增加测试，并运行完整测试和烟雾命令
 - 不得静默吞掉数据、模型或评估错误
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from src.data.chunking import DocumentChunk
-from src.generation.grounded import LocalGroundedGenerator
+from src.generation.grounded import evidence_is_insufficient
 from src.retrieval.types import RetrievalResult
 
 
@@ -23,8 +23,7 @@ def result(rank: int, title: str, text: str) -> RetrievalResult:
     return RetrievalResult(score=1.0, rank=rank, chunk=chunk)
 
 
-def test_high_confidence_nationality_comparison_is_grounded() -> None:
-    generator = object.__new__(LocalGroundedGenerator)
+def test_comparison_question_uses_general_evidence_gate_without_hardcoding() -> None:
     results = [
         result(1, "Ed Wood", "Ed Wood was an American filmmaker."),
         result(
@@ -34,11 +33,7 @@ def test_high_confidence_nationality_comparison_is_grounded() -> None:
         ),
     ]
 
-    answer = generator._high_confidence_comparison(
+    assert not evidence_is_insufficient(
         "Were Scott Derrickson and Ed Wood of the same nationality?",
         results,
-    )
-
-    assert answer == (
-        "Yes. Ed Wood and Scott Derrickson were both American. [1] [2]"
     )

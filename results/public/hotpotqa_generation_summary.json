@@ -1,0 +1,25 @@
+{
+  "citation_policy": "model_generated_then_validated; no forced citation injection",
+  "dataset": {
+    "sample_count": 80
+  },
+  "experiment": "hotpotqa_grounded_generation_after_citation_fix",
+  "limitations": [
+    "The local FLAN-T5-small generator emits valid citations for only a minority of answers.",
+    "Citation validity is not equivalent to claim-level faithfulness."
+  ],
+  "metrics": {
+    "abstained": 0.0,
+    "citation_precision": 0.15,
+    "citation_recall": 0.06666667,
+    "citation_validity": 0.15,
+    "exact_match": 0.2625,
+    "has_citation": 0.15,
+    "token_f1": 0.35175595
+  },
+  "schema_version": 1,
+  "timing": {
+    "milliseconds_per_query": 518.8074,
+    "total_seconds": 41.504592
+  }
+}

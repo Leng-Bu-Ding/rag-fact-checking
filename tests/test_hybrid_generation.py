@@ -49,7 +49,7 @@ def test_rrf_ties_are_stable() -> None:
     assert [result.chunk.chunk_id for result in fused] == ["a", "b"]
 
 
-def test_citation_fallback_prefers_titles_mentioned_in_question() -> None:
+def test_missing_model_citations_are_not_silently_invented() -> None:
     results = [
         make_result("wood", 1, title="Ed Wood"),
         make_result("other", 2, title="Other"),
@@ -62,7 +62,7 @@ def test_citation_fallback_prefers_titles_mentioned_in_question() -> None:
         results,
     )
 
-    assert answer.endswith("[1] [3]")
+    assert answer == "Yes, both were American."
 
 
 def test_invalid_citations_are_removed() -> None:
@@ -72,4 +72,4 @@ def test_invalid_citations_are_removed() -> None:
         [make_result("one", 1)],
     )
 
-    assert answer == "Supported . [1]"
+    assert answer == "Supported ."

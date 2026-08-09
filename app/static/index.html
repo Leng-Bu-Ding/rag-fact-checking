@@ -3,171 +3,57 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GroundCheck · 可信 RAG 演示</title>
+  <title>GroundCheck · 可追溯 RAG 演示</title>
   <style>
-    :root {
-      color-scheme: dark;
-      --bg: #07100f;
-      --surface: rgba(17, 31, 29, .82);
-      --line: rgba(173, 226, 211, .16);
-      --text: #eef9f5;
-      --muted: #9ab1aa;
-      --mint: #78e6bd;
-      --amber: #f5c66a;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; min-height: 100vh; color: var(--text);
-      font-family: Inter, "Segoe UI", system-ui, sans-serif;
-      background:
-        radial-gradient(circle at 15% 5%, rgba(39, 122, 101, .28), transparent 34rem),
-        radial-gradient(circle at 90% 35%, rgba(106, 78, 31, .18), transparent 28rem),
-        var(--bg);
-    }
-    body::before {
-      content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .18;
-      background-image: linear-gradient(var(--line) 1px, transparent 1px),
-        linear-gradient(90deg, var(--line) 1px, transparent 1px);
-      background-size: 48px 48px;
-      mask-image: linear-gradient(to bottom, black, transparent 78%);
-    }
-    main { width: min(1080px, calc(100% - 32px)); margin: 0 auto; padding: 38px 0 80px; }
-    nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 64px; }
-    .brand { font-weight: 750; letter-spacing: -.03em; font-size: 20px; }
-    .brand span { color: var(--mint); }
-    .status { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 13px; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 14px var(--amber); }
-    .dot.ready { background: var(--mint); box-shadow: 0 0 14px var(--mint); }
-    .eyebrow { color: var(--mint); font-size: 12px; text-transform: uppercase; letter-spacing: .18em; font-weight: 700; }
-    h1 { font-size: clamp(38px, 7vw, 76px); line-height: .98; letter-spacing: -.065em; margin: 16px 0 22px; max-width: 820px; }
-    .lead { color: var(--muted); font-size: 18px; line-height: 1.65; max-width: 700px; margin-bottom: 36px; }
-    .search {
-      padding: 10px; display: flex; gap: 10px; border: 1px solid var(--line);
-      background: rgba(15, 28, 26, .72); border-radius: 18px; backdrop-filter: blur(18px);
-      box-shadow: 0 24px 80px rgba(0,0,0,.25);
-    }
-    textarea {
-      border: 0; resize: none; flex: 1; min-height: 64px; padding: 17px 18px;
-      background: transparent; color: var(--text); font: inherit; font-size: 16px; outline: 0;
-    }
-    button {
-      border: 0; border-radius: 12px; background: var(--mint); color: #072018;
-      font-weight: 750; padding: 0 24px; cursor: pointer; transition: .2s ease;
-    }
-    button:hover { transform: translateY(-1px); filter: brightness(1.06); }
-    button:disabled { opacity: .5; cursor: wait; transform: none; }
-    .examples { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 15px; }
-    .chip {
-      border: 1px solid var(--line); background: rgba(16, 30, 28, .55);
-      color: var(--muted); padding: 9px 13px; border-radius: 999px; font-size: 12px;
-    }
-    .results { display: none; margin-top: 48px; }
-    .results.visible { display: block; animation: rise .45s ease both; }
-    @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
-    .answer-card {
-      border: 1px solid rgba(120, 230, 189, .28); border-radius: 20px;
-      background: linear-gradient(145deg, rgba(29, 61, 52, .78), rgba(13, 27, 25, .9));
-      padding: 28px; margin-bottom: 24px;
-    }
-    .label { color: var(--mint); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; font-weight: 800; }
-    .answer { font-size: 22px; line-height: 1.55; margin: 12px 0 20px; }
-    .metrics { color: var(--muted); font-size: 12px; display: flex; gap: 20px; flex-wrap: wrap; }
-    .evidence-head { display: flex; justify-content: space-between; align-items: end; margin: 34px 0 14px; }
-    h2 { margin: 0; font-size: 22px; letter-spacing: -.03em; }
-    .evidence-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-    .evidence {
-      border: 1px solid var(--line); background: var(--surface); border-radius: 16px;
-      padding: 19px; transition: border-color .2s ease, transform .2s ease;
-    }
-    .evidence:hover { border-color: rgba(120, 230, 189, .42); transform: translateY(-2px); }
-    .evidence-top { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 11px; }
-    .cite { color: var(--amber); font-weight: 800; }
-    .score { color: var(--muted); font-size: 11px; }
-    .title { font-weight: 750; margin-bottom: 8px; }
-    .text { color: #c8d8d3; line-height: 1.55; font-size: 13px; }
-    .empty { color: var(--muted); padding: 30px 0; }
-    @media (max-width: 720px) {
-      nav { margin-bottom: 42px; } .search { flex-direction: column; }
-      button { min-height: 52px; } .evidence-grid { grid-template-columns: 1fr; }
-    }
+    :root { color-scheme: dark; --bg:#07100f; --surface:rgba(17,31,29,.82); --line:rgba(173,226,211,.16); --text:#eef9f5; --muted:#9ab1aa; --mint:#78e6bd; --amber:#f5c66a; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--text); font-family:Inter,"Segoe UI",system-ui,sans-serif; background:radial-gradient(circle at 15% 5%,rgba(39,122,101,.28),transparent 34rem),radial-gradient(circle at 90% 35%,rgba(106,78,31,.18),transparent 28rem),var(--bg); }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.18; background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px); background-size:48px 48px; mask-image:linear-gradient(to bottom,black,transparent 78%); }
+    main { width:min(1080px,calc(100% - 32px)); margin:0 auto; padding:38px 0 80px; }
+    nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:64px; }
+    .brand { font-weight:750; letter-spacing:-.03em; font-size:20px; } .brand span,.eyebrow,.label { color:var(--mint); }
+    .status,.metrics { display:flex; gap:12px; align-items:center; color:var(--muted); font-size:12px; flex-wrap:wrap; }
+    .dot { width:8px; height:8px; border-radius:50%; background:var(--amber); box-shadow:0 0 14px var(--amber); } .dot.ready { background:var(--mint); box-shadow:0 0 14px var(--mint); }
+    .eyebrow,.label { font-size:11px; text-transform:uppercase; letter-spacing:.16em; font-weight:800; }
+    h1 { font-size:clamp(38px,7vw,76px); line-height:.98; letter-spacing:-.065em; margin:16px 0 22px; max-width:820px; }
+    .lead { color:var(--muted); font-size:18px; line-height:1.65; max-width:760px; margin-bottom:36px; }
+    .search { padding:10px; display:flex; gap:10px; border:1px solid var(--line); background:rgba(15,28,26,.72); border-radius:18px; backdrop-filter:blur(18px); box-shadow:0 24px 80px rgba(0,0,0,.25); }
+    textarea { border:0; resize:none; flex:1; min-height:64px; padding:17px 18px; background:transparent; color:var(--text); font:inherit; font-size:16px; outline:0; }
+    button { border:0; border-radius:12px; background:var(--mint); color:#072018; font-weight:750; padding:0 24px; cursor:pointer; transition:.2s ease; }
+    button:hover { transform:translateY(-1px); filter:brightness(1.06); } button:disabled { opacity:.5; cursor:wait; transform:none; }
+    .examples { display:flex; gap:9px; flex-wrap:wrap; margin-top:15px; } .chip { border:1px solid var(--line); background:rgba(16,30,28,.55); color:var(--muted); padding:9px 13px; border-radius:999px; font-size:12px; }
+    .results { display:none; margin-top:48px; } .results.visible { display:block; animation:rise .45s ease both; } @keyframes rise { from { opacity:0; transform:translateY(12px); } }
+    .answer-card { border:1px solid rgba(120,230,189,.28); border-radius:20px; background:linear-gradient(145deg,rgba(29,61,52,.78),rgba(13,27,25,.9)); padding:28px; margin-bottom:24px; }
+    .answer { font-size:22px; line-height:1.55; margin:12px 0 20px; } .warning { color:var(--amber); font-size:12px; margin-top:12px; }
+    .evidence-head { display:flex; justify-content:space-between; align-items:end; margin:34px 0 14px; } h2 { margin:0; font-size:22px; letter-spacing:-.03em; }
+    .evidence-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; } .evidence { border:1px solid var(--line); background:var(--surface); border-radius:16px; padding:19px; }
+    .evidence-top { display:flex; justify-content:space-between; gap:12px; margin-bottom:11px; } .cite { color:var(--amber); font-weight:800; } .score { color:var(--muted); font-size:11px; }
+    .title { font-weight:750; margin-bottom:8px; } .text { color:#c8d8d3; line-height:1.55; font-size:13px; }
+    @media (max-width:720px) { nav { margin-bottom:42px; } .search { flex-direction:column; } button { min-height:52px; } .evidence-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
   <main>
-    <nav>
-      <div class="brand">Ground<span>Check</span></div>
-      <div class="status"><i class="dot" id="dot"></i><span id="status">模型初始化中</span></div>
-    </nav>
+    <nav><div class="brand">Ground<span>Check</span></div><div class="status"><i class="dot" id="dot"></i><span id="status">模型初始化中</span></div></nav>
     <section>
       <div class="eyebrow">Evidence-grounded intelligence</div>
-      <h1>每个回答，<br>都有证据可查。</h1>
-      <p class="lead">本地运行的可信 RAG 演示。Hybrid RRF 同时使用 BM25 精确匹配和 FAISS 语义检索，再由小型生成模型基于证据回答。</p>
-      <form class="search" id="form">
-        <textarea id="question" placeholder="输入一个英文事实问题，例如：Were Scott Derrickson and Ed Wood of the same nationality?"></textarea>
-        <button id="submit" type="submit">检索并回答 →</button>
-      </form>
+      <h1>每个回答，<br>都能回到原始证据。</h1>
+      <p class="lead">本地 HotpotQA 演示：BM25 与 Dense FAISS 通过 RRF 融合，再由 Cross-Encoder 重排。回答中的引用由生成模型输出并做合法性校验；系统不会自动补造引用。</p>
+      <form class="search" id="form"><textarea id="question" placeholder="输入英文事实问题，例如：Were Scott Derrickson and Ed Wood of the same nationality?"></textarea><button id="submit" type="submit">检索并回答 →</button></form>
       <div class="examples" id="examples"></div>
     </section>
     <section class="results" id="results">
-      <article class="answer-card">
-        <div class="label">Grounded answer</div>
-        <div class="answer" id="answer"></div>
-        <div class="metrics" id="metrics"></div>
-      </article>
-      <div class="evidence-head">
-        <h2>检索证据</h2>
-        <span class="score">点击引用编号可对应答案来源</span>
-      </div>
+      <article class="answer-card"><div class="label">Grounded answer</div><div class="answer" id="answer"></div><div class="metrics" id="metrics"></div><div class="warning" id="citation-note"></div></article>
+      <div class="evidence-head"><h2>检索证据</h2><span class="score">证据分数是 Cross-Encoder logit，不是概率</span></div>
       <div class="evidence-grid" id="evidence"></div>
     </section>
   </main>
   <script>
     const $ = id => document.getElementById(id);
-    const escapeHtml = value => value.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    async function loadStatus() {
-      try {
-        const response = await fetch('/api/status');
-        const data = await response.json();
-        $('status').textContent = data.ready ? `${data.chunk_count.toLocaleString()} 个知识片段 · 已就绪` : '模型初始化中';
-        $('dot').classList.toggle('ready', data.ready);
-      } catch { $('status').textContent = '服务连接中'; }
-    }
-    async function loadExamples() {
-      const response = await fetch('/api/samples?limit=4');
-      const data = await response.json();
-      $('examples').innerHTML = data.samples.map(item =>
-        `<button class="chip" type="button">${escapeHtml(item.question)}</button>`).join('');
-      document.querySelectorAll('.chip').forEach(chip => chip.onclick = () => $('question').value = chip.textContent);
-    }
-    $('form').addEventListener('submit', async event => {
-      event.preventDefault();
-      const question = $('question').value.trim();
-      if (!question) return;
-      $('submit').disabled = true; $('submit').textContent = '正在推理…';
-      $('results').classList.add('visible');
-      $('answer').textContent = '正在检索证据并生成回答…';
-      $('evidence').innerHTML = '';
-      try {
-        const response = await fetch('/api/ask', {
-          method: 'POST', headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({question, top_k: 5})
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.detail || '请求失败');
-        $('answer').textContent = data.answer;
-        $('metrics').innerHTML = `<span>检索 ${data.timing_ms.retrieval} ms</span><span>生成 ${data.timing_ms.generation} ms</span><span>总计 ${data.timing_ms.total} ms</span><span>Hybrid RRF</span>`;
-        $('evidence').innerHTML = data.evidence.map(item => `
-          <article class="evidence">
-            <div class="evidence-top"><span class="cite">[${item.citation}]</span><span class="score">RRF ${item.score.toFixed(5)}</span></div>
-            <div class="title">${escapeHtml(item.title)}</div>
-            <div class="text">${escapeHtml(item.text)}</div>
-          </article>`).join('');
-      } catch (error) {
-        $('answer').textContent = `暂时无法回答：${error.message}`;
-      } finally {
-        $('submit').disabled = false; $('submit').textContent = '检索并回答 →';
-      }
-    });
+    const escapeHtml = value => String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    async function loadStatus(){try{const response=await fetch('/api/status');const data=await response.json();$('status').textContent=data.ready?`${data.chunk_count.toLocaleString()} 个知识片段 · 已就绪`:'模型初始化中';$('dot').classList.toggle('ready',data.ready);}catch{$('status').textContent='服务连接失败';}}
+    async function loadExamples(){const response=await fetch('/api/samples?limit=4');const data=await response.json();$('examples').innerHTML=data.samples.map(item=>`<button class="chip" type="button">${escapeHtml(item.question)}</button>`).join('');document.querySelectorAll('.chip').forEach(chip=>chip.onclick=()=>$('question').value=chip.textContent);}
+    $('form').addEventListener('submit',async event=>{event.preventDefault();const question=$('question').value.trim();if(!question)return;$('submit').disabled=true;$('submit').textContent='正在推理…';$('results').classList.add('visible');$('answer').textContent='正在检索、重排并生成回答…';$('evidence').innerHTML='';$('citation-note').textContent='';try{const response=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,top_k:5})});const data=await response.json();if(!response.ok)throw new Error(data.detail||'请求失败');$('answer').textContent=data.answer;$('metrics').innerHTML=`<span>候选检索 ${data.timing_ms.retrieval} ms</span><span>重排 ${data.timing_ms.reranking} ms</span><span>生成 ${data.timing_ms.generation} ms</span><span>总计 ${data.timing_ms.total} ms</span>`;$('citation-note').textContent=data.answer.includes('[')?'引用由模型生成并通过范围校验。':'模型本次未输出引用；系统没有自动添加。';$('evidence').innerHTML=data.evidence.map(item=>`<article class="evidence"><div class="evidence-top"><span class="cite">[${item.citation}]</span><span class="score">${escapeHtml(data.score_type)} ${item.score.toFixed(5)}</span></div><div class="title">${escapeHtml(item.title)}</div><div class="text">${escapeHtml(item.text)}</div></article>`).join('');}catch(error){$('answer').textContent=`暂时无法回答：${error.message}`;}finally{$('submit').disabled=false;$('submit').textContent='检索并回答 →';}});
     loadStatus().then(loadExamples);
   </script>
 </body>

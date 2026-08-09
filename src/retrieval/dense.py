@@ -200,6 +200,11 @@ class DenseIndex:
     def normalize(self) -> bool:
         return self._normalize
 
+    @property
+    def embedding_matrix(self) -> np.ndarray:
+        """Return a defensive copy aligned with ``chunks``."""
+        return np.array(self._vectors, copy=True, order="C")
+
     def subset(self, chunks: Sequence[DocumentChunk]) -> DenseIndex:
         positions = {chunk.chunk_id: index for index, chunk in enumerate(self._chunks)}
         try:

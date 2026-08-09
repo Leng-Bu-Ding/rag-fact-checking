@@ -1,7 +1,10 @@
 from __future__ import annotations
 
-from functools import lru_cache
+import asyncio
+import threading
+from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import AsyncIterator
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
@@ -13,18 +16,34 @@ from src.services.rag import RAGService
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
-app = FastAPI(title="Trustworthy RAG API", version="0.4.0")
+_rag_service: RAGService | None = None
+_rag_service_lock = threading.Lock()
+
+
+def get_rag_service() -> RAGService:
+    """Load the model stack exactly once, including under concurrent requests."""
+    global _rag_service
+    if _rag_service is None:
+        with _rag_service_lock:
+            if _rag_service is None:
+                _rag_service = RAGService(PROJECT_ROOT)
+    return _rag_service
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    # Uvicorn is not ready until the indexes and all local models can load.
+    await asyncio.to_thread(get_rag_service)
+    yield
+
+
+app = FastAPI(title="Trustworthy RAG API", version="0.5.0", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=500)
     top_k: int = Field(default=5, ge=1, le=10)
-
-
-@lru_cache(maxsize=1)
-def get_rag_service() -> RAGService:
-    return RAGService(PROJECT_ROOT)
 
 
 @app.get("/", include_in_schema=False)
