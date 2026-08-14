@@ -8,8 +8,8 @@
 
 - HotpotQA：检索核心完成；生成可信度问题已修正并重测。
 - FinanceBench：数据适配、真实 PDF、页码验证、页内 Chunk、Global / Document-scoped 检索、Calculator、114题 API 生成和答案 Judge 完成。
-- 求职交付：RAG PR #1 已通过 Squash merge 合入 `main`；本次114题生成与 Judge
-  成果已形成发布候选，等待新 PR 合入。RAG 与医疗两个公开仓库均已建立。
+- 求职交付：RAG PR #2 已通过 Squash merge 合入 `main`，114题生成与 Judge
+  成果已正式发布。RAG 与医疗两个公开仓库均已建立。
 - 文档治理：建立“Git 仓库保存可验证事实、Notion 保存个人认知、本机保存私有/大型产物”的三层体系。
 - 外部阻塞：医疗 QLoRA 重训需要云端 CUDA GPU，优先使用24GB级显存并先做显存 smoke test。
 
@@ -20,7 +20,7 @@
 
 - RAG 仓库：https://github.com/Leng-Bu-Ding/rag-fact-checking
 - 医疗仓库：https://github.com/Leng-Bu-Ding/medical-llm-qlora
-- 当前 RAG `main`：`a2fd81f`（PR #1 Squash merge）。
+- 当前 RAG `main`：`d9e51fd`（PR #2 Squash merge）。
 - 可公开指标以 `results/public/*.json` 为底层事实来源。
 - 参数以实际运行脚本读取的 `configs/*.yaml` 为准；Notion 只解释结论与决策。
 - API Key、原始数据、PDF、模型权重、索引和完整逐题报告不进入 Git。
