@@ -20,7 +20,7 @@
 
 - RAG 仓库：https://github.com/Leng-Bu-Ding/rag-fact-checking
 - 医疗仓库：https://github.com/Leng-Bu-Ding/medical-llm-qlora
-- 当前 RAG `main`：`d9e51fd`（PR #2 Squash merge）。
+- FinanceBench 114题生成发布提交：`d9e51fd`（PR #2 Squash merge）。
 - 可公开指标以 `results/public/*.json` 为底层事实来源。
 - 参数以实际运行脚本读取的 `configs/*.yaml` 为准；Notion 只解释结论与决策。
 - API Key、原始数据、PDF、模型权重、索引和完整逐题报告不进入 Git。
