@@ -107,7 +107,6 @@
   },
   "limitations": [
     "Only questions whose source PDF passed download and exact page-alignment validation are evaluated.",
-    "Answer-generation accuracy is not reported until an API-backed run is completed.",
     "Cross-Encoder results use a generic MS MARCO model without financial-domain fine-tuning."
   ],
   "schema_version": 1,

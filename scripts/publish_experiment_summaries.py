@@ -50,8 +50,60 @@ def finance_summary(report: dict[str, Any]) -> dict[str, Any]:
         "scopes": scopes,
         "limitations": [
             "Only questions whose source PDF passed download and exact page-alignment validation are evaluated.",
-            "Answer-generation accuracy is not reported until an API-backed run is completed.",
             "Cross-Encoder results use a generic MS MARCO model without financial-domain fine-tuning.",
+        ],
+    }
+
+
+def finance_generation_summary(
+    generation: dict[str, Any], judge: dict[str, Any]
+) -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "experiment": "financebench_api_generation_v5",
+        "evaluation": {
+            "question_count": generation["question_count"],
+            "retrieval_scope": generation["scope"],
+            "retrieval_system": generation["system"],
+            "prompt_version": generation["prompt_version"],
+            "generator_model": generation["generator"]["model"],
+            "successful_questions": generation["successful_questions"],
+            "failed_questions": generation["failed_questions"],
+            "all_gold_pages_retrieved_questions": generation[
+                "all_gold_pages_retrieved_questions"
+            ],
+        },
+        "deterministic_metrics": generation["metrics"],
+        "deterministic_metrics_when_all_gold_pages_retrieved": generation[
+            "metrics_when_all_gold_pages_retrieved"
+        ],
+        "generation_by_question_type": generation["by_question_type"],
+        "answer_judge": {
+            "judge_version": judge["judge_version"],
+            "judge_model": judge["judge_model"],
+            "verdicts": judge["verdicts"],
+            "overall_correct_rate": judge["overall_correct_rate"],
+            "generated_answer_correct_rate": judge["generated_answer_correct_rate"],
+            "correct_rate_when_all_gold_pages_retrieved": judge[
+                "correct_rate_when_all_gold_pages_retrieved"
+            ],
+            "by_question_type": judge["by_question_type"],
+            "error_types": judge["error_types"],
+        },
+        "usage": {
+            "generation_prompt_tokens": generation["prompt_tokens"],
+            "generation_completion_tokens": generation["completion_tokens"],
+            "judge_prompt_tokens": judge["prompt_tokens"],
+            "judge_completion_tokens": judge["completion_tokens"],
+            "generation_latency_seconds": generation["total_latency_seconds"],
+            "judge_latency_seconds": judge["total_latency_seconds"],
+        },
+        "limitations": [
+            "The 114 questions are the subset whose PDFs passed download and exact page-alignment validation; this is not 150/150 coverage.",
+            "Exact match underestimates semantically equivalent free-form and rounded numerical answers.",
+            "The answer judge uses the same model family as the generator and is not an independent human audit.",
+            "Gold evidence and justifications are evaluation-only and are never included in generation prompts or the retrieval index.",
+            "Monetary cost is not inferred from token counts because the run used provider free quota and the billing statement was not imported.",
         ],
     }
 
@@ -101,12 +153,22 @@ def main() -> None:
     hotpot = read_json(
         PROJECT_ROOT / "results" / "hotpotqa_generation_sample100_test80.json"
     )
+    finance_generation = read_json(
+        PROJECT_ROOT / "results" / "financebench_generation_all_v5_summary.json"
+    )
+    finance_judge = read_json(
+        PROJECT_ROOT / "results" / "financebench_answer_judge_all_v1_summary.json"
+    )
     write_json(public_dir / "financebench_retrieval_summary.json", finance_summary(finance))
     write_json(
         public_dir / "hotpotqa_retrieval_summary.json",
         hotpot_retrieval_summary(hotpot_retrieval),
     )
     write_json(public_dir / "hotpotqa_generation_summary.json", hotpot_generation_summary(hotpot))
+    write_json(
+        public_dir / "financebench_generation_summary.json",
+        finance_generation_summary(finance_generation, finance_judge),
+    )
     print(f"Published summaries to {public_dir}")
 
 

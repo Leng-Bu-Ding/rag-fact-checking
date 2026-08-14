@@ -10,9 +10,9 @@
 
 ## 当前结论
 
-截至 2026-08-08，HotpotQA 检索实验和 FinanceBench 真实 PDF 检索实验已经完成；
-FinanceBench API 答案评测尚待 API Key，医疗 QLoRA 重训位于独立仓库且尚待
-24GB GPU。文档只报告已经运行得到的数字。
+截至 2026-08-13，HotpotQA 检索/生成实验和 FinanceBench 真实 PDF 检索/API
+生成实验已经完成；医疗 QLoRA 重训位于独立仓库且尚待云端 GPU。RAG 与医疗
+两个公开仓库均已发布；文档只报告已经运行得到的数字。
 
 ### HotpotQA：算法验证
 
@@ -72,6 +72,31 @@ Dense 的 Global Page Hit@10 失败中，68/114 是“找到了正确财报但�
 只有 3/114 没在 Top-10 找到正确财报，因此下一步重点应是页级切块、表格表达
 和金融域重排，而不是继续堆检索器名称。
 
+#### API Generation：Document-scoped Dense Top-5
+
+在覆盖语料内的114题上，使用冻结的 `financebench-v5` Prompt 和
+`qwen3.7-plus-2026-05-26` 完成真实 API 生成。系统先选择财务定义与行项目，再由
+安全 Calculator 执行算式；不把标准答案、justification 或 gold evidence 放入
+Prompt/索引。
+
+| 结果 | 数量 | 占114题 |
+|---|---:|---:|
+| Judge 正确 | 43 | 37.72% |
+| Judge 错误 | 20 | 17.54% |
+| 明确拒答 | 22 | 19.30% |
+| 生成计划/结构失败 | 29 | 25.44% |
+
+- 对63个实际给出可评判答案的问题，同模型 Judge 正确率为68.25%。
+- 当全部 gold 证据页进入 Top-5 时，端到端正确率为58.70%（46题）。
+- 确定性指标：EM 6.14%、Numeric Match 18.42%、Citation Precision 25.58%、
+  Citation Recall 29.39%。EM 会低估自由文本和近似数值等价答案。
+- 生成消耗310,021输入 Token、20,577输出 Token，累计模型延迟650.19秒；Judge
+  额外消耗17,804输入 Token、5,040输出 Token，延迟153.45秒。
+
+Judge 只比较问题、参考答案和候选答案；它与生成器使用同一模型家族，因此属于
+自动语义评测，不等同于独立人工审计。总体结果显示：检索到完整证据后质量明显
+提高，但页级召回、拒答比例和结构化生成失败仍是当前主要瓶颈。
+
 ## 系统架构
 
 ```mermaid
@@ -103,6 +128,19 @@ flowchart LR
 
 Dense 索引支持增量复用：本次语料从 18,490 增至 18,975 个 Chunk 时，复用了
 18,490 个向量，只重新编码 485 个新增 Chunk。
+
+## 文档导航
+
+- [系统架构与请求生命周期](docs/architecture.md)
+- [环境、模型与资源要求](docs/environment.md)
+- [数据与产物生命周期](docs/data-and-artifacts.md)
+- [代码与配置地图](docs/code-and-configuration.md)
+- [实验登记与事实来源](docs/experiments.md)
+- [运行、验证与故障排查手册](docs/runbook.md)
+
+README 是公开入口；配置以 `configs/` 为准，指标以 `results/public/` 为准，
+详细设计和复现方法放在 `docs/`。API Key、原始数据、PDF、模型、索引和完整逐题
+结果不提交到 Git。
 
 ## 从零建立环境
 
@@ -143,12 +181,15 @@ python -m pip install -r requirements-dev.txt
 & '.\.conda\python.exe' '.\scripts\validate_financebench_pages.py'
 & '.\.conda\python.exe' '.\scripts\prepare_financebench.py' build
 & '.\.conda\python.exe' '.\scripts\run_financebench_retrieval_experiment.py'
-& '.\.conda\python.exe' '.\scripts\run_financebench_generation_evaluation.py' --dry-run
+& '.\.conda\python.exe' '.\scripts\run_financebench_generation_evaluation.py' --dry-run --evaluation-set dev
+& '.\.conda\python.exe' '.\scripts\run_financebench_generation_evaluation.py' --evaluation-set all
+& '.\.conda\python.exe' '.\scripts\run_financebench_answer_judge.py' --evaluation-set all
 & '.\.conda\python.exe' '.\scripts\publish_experiment_summaries.py'
 ```
 
-真实生成评测需要设置 `RAG_API_BASE_URL`、`RAG_API_KEY`、`RAG_API_MODEL`。
-流水线支持断点续跑，并分别保存检索、重排、生成延迟和 token 元数据。
+真实生成评测从终端环境变量或被 Git 忽略的 `.env.local` 读取
+`RAG_API_BASE_URL`、`RAG_API_KEY`、`RAG_API_MODEL`。流水线支持固定 Dev/Holdout、
+断点续跑、版本化结果和逐题失败隔离，并保存检索、生成、Judge 延迟与 Token 元数据。
 
 ## 启动本地 Demo
 
@@ -170,10 +211,11 @@ python -m pip install -r requirements-dev.txt
 - [`results/public/hotpotqa_retrieval_summary.json`](results/public/hotpotqa_retrieval_summary.json)
 - [`results/public/hotpotqa_generation_summary.json`](results/public/hotpotqa_generation_summary.json)
 - [`results/public/financebench_retrieval_summary.json`](results/public/financebench_retrieval_summary.json)
+- [`results/public/financebench_generation_summary.json`](results/public/financebench_generation_summary.json)
 
 ## 项目边界
 
-当前项目不是生产级金融系统：FinanceBench 尚未达到 150/150 PDF 覆盖，API
-答案评测尚未运行，拒答和 claim-level faithfulness 仍待补充，也没有 Docker
-或公网部署。它的价值来自真实 PDF、严格防泄漏、公平对照、可追踪页码、负结果
-和可复现实验，而不是声称“生产可用”或“算法领先”。
+当前项目不是生产级金融系统：FinanceBench 尚未达到150/150 PDF覆盖，自动 Judge
+不是人工审计，claim-level faithfulness、Docker和公网部署仍待补充。它的价值来自
+真实 PDF、严格防泄漏、公平对照、可追踪页码、负结果和可复现实验，而不是声称
+“生产可用”或“算法领先”。

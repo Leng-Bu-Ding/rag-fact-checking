@@ -37,6 +37,8 @@
 & '.\.conda\python.exe' '.\scripts\prepare_financebench.py' build
 & '.\.conda\python.exe' '.\scripts\run_financebench_retrieval_experiment.py'
 & '.\.conda\python.exe' '.\scripts\run_financebench_generation_evaluation.py' --dry-run
+& '.\.conda\python.exe' '.\scripts\run_financebench_generation_evaluation.py' --evaluation-set all
+& '.\.conda\python.exe' '.\scripts\run_financebench_answer_judge.py' --evaluation-set all
 & '.\.conda\python.exe' '.\scripts\publish_experiment_summaries.py'
 & '.\.conda\python.exe' '.\scripts\start_demo.py'
 & '.\.conda\python.exe' -m pytest -q --basetemp '.\.test_tmp' -p no:cacheprovider

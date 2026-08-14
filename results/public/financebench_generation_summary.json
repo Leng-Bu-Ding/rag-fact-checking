@@ -1,0 +1,111 @@
+{
+  "answer_judge": {
+    "by_question_type": {
+      "domain-relevant": {
+        "correct_rate": 0.375,
+        "question_count": 40,
+        "verdicts": {
+          "abstain": 12,
+          "correct": 15,
+          "generation_error": 5,
+          "incorrect": 8
+        }
+      },
+      "metrics-generated": {
+        "correct_rate": 0.5,
+        "question_count": 38,
+        "verdicts": {
+          "abstain": 2,
+          "correct": 19,
+          "generation_error": 16,
+          "incorrect": 1
+        }
+      },
+      "novel-generated": {
+        "correct_rate": 0.25,
+        "question_count": 36,
+        "verdicts": {
+          "abstain": 8,
+          "correct": 9,
+          "generation_error": 8,
+          "incorrect": 11
+        }
+      }
+    },
+    "correct_rate_when_all_gold_pages_retrieved": 0.58695652,
+    "error_types": {
+      "incomplete": 3,
+      "unsupported_claim": 3,
+      "wrong_direction": 3,
+      "wrong_value": 11
+    },
+    "generated_answer_correct_rate": 0.68253968,
+    "judge_model": "qwen3.7-plus-2026-05-26",
+    "judge_version": "financebench-answer-judge-v1",
+    "overall_correct_rate": 0.37719298,
+    "verdicts": {
+      "abstain": 22,
+      "correct": 43,
+      "generation_error": 29,
+      "incorrect": 20
+    }
+  },
+  "deterministic_metrics": {
+    "citation_precision": 0.25584795,
+    "citation_recall": 0.29385965,
+    "exact_match": 0.06140351,
+    "numeric_match": 0.18421053,
+    "token_f1": 0.18776934
+  },
+  "deterministic_metrics_when_all_gold_pages_retrieved": {
+    "citation_precision": 0.60144928,
+    "citation_recall": 0.69565217,
+    "exact_match": 0.08695652,
+    "numeric_match": 0.32608696,
+    "token_f1": 0.28593367
+  },
+  "evaluation": {
+    "all_gold_pages_retrieved_questions": 46,
+    "failed_questions": 29,
+    "generator_model": "qwen3.7-plus-2026-05-26",
+    "prompt_version": "financebench-v5",
+    "question_count": 114,
+    "retrieval_scope": "document",
+    "retrieval_system": "dense",
+    "successful_questions": 85
+  },
+  "experiment": "financebench_api_generation_v5",
+  "generation_by_question_type": {
+    "domain-relevant": {
+      "citation_recall": 0.2,
+      "numeric_match": 0.075,
+      "question_count": 40
+    },
+    "metrics-generated": {
+      "citation_recall": 0.31578947,
+      "numeric_match": 0.36842105,
+      "question_count": 38
+    },
+    "novel-generated": {
+      "citation_recall": 0.375,
+      "numeric_match": 0.11111111,
+      "question_count": 36
+    }
+  },
+  "limitations": [
+    "The 114 questions are the subset whose PDFs passed download and exact page-alignment validation; this is not 150/150 coverage.",
+    "Exact match underestimates semantically equivalent free-form and rounded numerical answers.",
+    "The answer judge uses the same model family as the generator and is not an independent human audit.",
+    "Gold evidence and justifications are evaluation-only and are never included in generation prompts or the retrieval index.",
+    "Monetary cost is not inferred from token counts because the run used provider free quota and the billing statement was not imported."
+  ],
+  "schema_version": 1,
+  "usage": {
+    "generation_completion_tokens": 20577,
+    "generation_latency_seconds": 650.185416,
+    "generation_prompt_tokens": 310021,
+    "judge_completion_tokens": 5040,
+    "judge_latency_seconds": 153.446265,
+    "judge_prompt_tokens": 17804
+  }
+}

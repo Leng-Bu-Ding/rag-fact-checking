@@ -54,5 +54,21 @@ financebench:
     api_key_env: RAG_API_KEY
     model_env: RAG_API_MODEL
     timeout_seconds: 90
-    predictions_path: results/financebench_generation_predictions.jsonl
-    summary_path: results/financebench_generation_summary.json
+    trust_env_proxy: false
+    request_options:
+      enable_thinking: false
+    evaluation_sets:
+      dev:
+        - financebench_id_00005
+        - financebench_id_00288
+        - financebench_id_02608
+        - financebench_id_03029
+      holdout:
+        - financebench_id_00464
+        - financebench_id_02981
+        - financebench_id_03282
+        - financebench_id_03856
+    predictions_path_template: results/financebench_generation_{evaluation_set}_v5_predictions.jsonl
+    summary_path_template: results/financebench_generation_{evaluation_set}_v5_summary.json
+    judge_predictions_path_template: results/financebench_answer_judge_{evaluation_set}_v1.jsonl
+    judge_summary_path_template: results/financebench_answer_judge_{evaluation_set}_v1_summary.json
